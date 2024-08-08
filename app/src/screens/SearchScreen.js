@@ -72,6 +72,7 @@ const exploringIndiaArray = [
   "Ranthambore",
   "Lucknow",
   "Gwalior",
+  "Kokan"
 ];
 
 const getRandomQuery = () =>
