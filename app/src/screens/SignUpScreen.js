@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
 import * as ImagePicker from "expo-image-picker";
 import Svg, { Path } from 'react-native-svg';
+import axios from 'axios';
+import { BASE_URL } from '../constants/constants';
 import {
   View,
   Text,
@@ -16,6 +18,7 @@ import {
 } from "react-native";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import file from "../../internal_assets/internal_images/file.png";
+import { uploadImage } from "../service/uploadImage";
 
 export default function SignupScreen() {
   const navigation = useNavigation();
@@ -31,7 +34,7 @@ export default function SignupScreen() {
   const windowWidth = useWindowDimensions().width;
   const windowHeight = useWindowDimensions().height;
   const [error, setError] = useState({});
-  const [image, setImage] = useState('https://images.pexels.com/photos/15994858/pexels-photo-15994858/free-photo-of-vintage-zorki-camera.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1');
+  const [image, setImage] = useState('');
 
   const validateForm = () => {
     let errors = {};
@@ -64,43 +67,61 @@ export default function SignupScreen() {
     }
   };
 
-  // const handleSubmit = () => {
-  //   if (validateForm()) {
-  //     console.log("Submitted Form");
-  //     //here upload image to cloudinary or any other cloud
-  //     console.log("Image URI:", image);
-  //     alert("Submitted Form");
-  //     setConfirmPassword("");
-  //     setEmail("");
-  //     setError({});
-  //     setPhoneno("");
-  //     setUsername("");
-  //     setPassword("");
-  //   }
-  // };
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (validateForm()) {
-      console.log("Submitted Form");
-      //here upload image to cloudinary or any other cloud
-      console.log("Image URI:", image);
-
-      // Instead of showing an alert, navigate to OtpVerificationForm
-      navigation.navigate("OtpVerification", {
-        username,
-        email,
-        password,
-        phoneno,
-        image,
-      });
-
-      // Clear the form fields
-      setConfirmPassword("");
-      setEmail("");
-      setError({});
-      setPhoneno("");
-      setUsername("");
-      setPassword("");
-      setImage(null);
+      try {
+        // Upload image to cloud storage (assuming uploadImage is an async function)
+        const imageUrl = await uploadImage(image);
+  
+        // Prepare the payload
+        const payload = {
+          password: password,
+          name: username,
+          email: email,
+          mobile: phoneno,
+          image: imageUrl,
+        };
+  
+        // Make the API call using fetch
+        // const response = await fetch(`${BASE_URL}/api/auth/register`, {
+        //   method: 'POST',
+        //   headers: {
+        //     'Content-Type': 'application/json',
+        //   },
+        //   body: JSON.stringify(payload),
+        // });
+        const response = await axios.post(`${BASE_URL}/api/auth/register`, payload);
+        console.log('response',response)
+  
+        if (!response.ok) {
+          throw new Error(`HTTP error ${response.status}`);
+        }
+  
+        const data = await response.json();
+        console.log('API Response:', data);
+  
+        // If successful, navigate to OTP verification
+        navigation.navigate("OtpVerification", {
+          username,
+          email,
+          password,
+          phoneno,
+          image: imageUrl,
+        });
+  
+        // Clear the form fields
+        setConfirmPassword("");
+        setEmail("");
+        setError({});
+        setPhoneno("");
+        setUsername("");
+        setPassword("");
+        setImage(null);
+      } catch (error) {
+        console.error('Registration error:', error);
+        // Handle error (e.g., show error message to user)
+        setError({ api: 'Registration failed. Please try again.' });
+      }
     }
   };
 
@@ -135,7 +156,7 @@ export default function SignupScreen() {
           style={[styles.image, { opacity: fadeAnim }]}
         />
       </View> */}
-      <Image source={image ? { uri: image } : ""} style={styles.previewImage} />
+      <Image source={image ? { uri: image } : {uri : staticContent.image}} style={styles.previewImage} />
       <TouchableOpacity style={styles.newButton}  onPress={pickImage}>
       <View style={styles.iconContainer}>
         <Svg

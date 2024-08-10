@@ -30,10 +30,13 @@ export default function BottomNavigationBar() {
         <Ionicons name="search-outline" size={24} color={activeButton === 'Search' ? 'white' : 'black'} />
       </Pressable>
       <Pressable style={styles.navButton}>
-        <Ionicons name="add-circle-outline" size={24} color="black" />
-      </Pressable>
-      <Pressable style={styles.navButton}>
         <Ionicons name="notifications-outline" size={24} color="black" />
+      </Pressable>
+      <Pressable
+        style={[styles.navButton, activeButton === 'ImageUpload' && styles.activeButton]}
+        onPress={() => handlePress('ImageUpload')}
+      >
+        <Ionicons name="add-circle-outline" size={24} color={activeButton === 'ImageUpload' ? 'white' : 'black'} />
       </Pressable>
       <Pressable
         style={[styles.navButton, activeButton === 'Profile' && styles.activeButton]}
@@ -52,12 +55,6 @@ export default function BottomNavigationBar() {
         onPress={() => handlePress('Signup')}
       >
         <Ionicons name="person-add-outline" size={24} color={activeButton === 'Signup' ? 'white' : 'black'} />
-      </Pressable>
-      <Pressable
-        style={[styles.navButton, activeButton === 'ImageUpload' && styles.activeButton]}
-        onPress={() => handlePress('ImageUpload')}
-      >
-        <Ionicons name="person-add-outline" size={24} color={activeButton === 'ImageUpload' ? 'white' : 'black'} />
       </Pressable>
       <StatusBar barStyle="dark-content" backgroundColor="orange" />
     </View>
