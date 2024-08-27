@@ -43,7 +43,7 @@ const OtpVerificationForm = () => {
       // Correct OTP, navigate to HomeScreen
       navigation.reset({
         index: 0,
-        routes: [{ name: 'Home' }],
+        routes: [{ name: 'Login' }],
       });
     } else {
       // Incorrect OTP
@@ -79,7 +79,7 @@ const OtpVerificationForm = () => {
           <Text style={styles.actionText}>Verify me</Text>
         </TouchableOpacity>
       </View>
-      <StatusBar barStyle="dark-content" backgroundColor="orange" />
+      <StatusBar barStyle="light-content" backgroundColor="#481f8aff" />
     </SafeAreaView>
   );
 };
@@ -135,7 +135,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderRadius: 8,
-    backgroundColor: "orange",
+    backgroundColor: "#FF7B1C",
     alignItems: "center",
     alignSelf: "flex-end",
     shadowColor: "#000",

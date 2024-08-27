@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
 import * as ImagePicker from "expo-image-picker";
-import Svg, { Path } from 'react-native-svg';
-import axios from 'axios';
-import { BASE_URL } from '../constants/constants';
+import Svg, { Path } from "react-native-svg";
+import axios from "axios";
+import { BASE_URL } from "../constants/constants";
 import {
   View,
   Text,
@@ -34,7 +34,7 @@ export default function SignupScreen() {
   const windowWidth = useWindowDimensions().width;
   const windowHeight = useWindowDimensions().height;
   const [error, setError] = useState({});
-  const [image, setImage] = useState('');
+  const [image, setImage] = useState("");
 
   const validateForm = () => {
     let errors = {};
@@ -72,7 +72,8 @@ export default function SignupScreen() {
       try {
         // Upload image to cloud storage (assuming uploadImage is an async function)
         const imageUrl = await uploadImage(image);
-  
+        console.log(imageUrl);
+
         // Prepare the payload
         const payload = {
           password: password,
@@ -81,46 +82,46 @@ export default function SignupScreen() {
           mobile: phoneno,
           image: imageUrl,
         };
-  
-        // Make the API call using fetch
-        // const response = await fetch(`${BASE_URL}/api/auth/register`, {
-        //   method: 'POST',
-        //   headers: {
-        //     'Content-Type': 'application/json',
-        //   },
-        //   body: JSON.stringify(payload),
-        // });
-        const response = await axios.post(`${BASE_URL}/api/auth/register`, payload);
-        console.log('response',response)
-  
-        if (!response.ok) {
-          throw new Error(`HTTP error ${response.status}`);
+
+        const response = await axios.post(
+          `${BASE_URL}/api/auth/register`,
+          payload,
+          {
+            timeout: 10000, // Set a timeout of 10 seconds
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+            validateStatus: function (status) {
+              return status >= 200 && status < 300; // Default
+            },
+          }
+        );
+        console.log("response", response);
+
+        if (response.data.user._id) {
+          // If successful, navigate to OTP verification
+          navigation.navigate("OtpVerification", {
+            username,
+            email,
+            password,
+            phoneno,
+            image: imageUrl,
+          });
+
+          // Clear the form fields
+          setConfirmPassword("");
+          setEmail("");
+          setError({});
+          setPhoneno("");
+          setUsername("");
+          setPassword("");
+          setImage(null);
         }
-  
-        const data = await response.json();
-        console.log('API Response:', data);
-  
-        // If successful, navigate to OTP verification
-        navigation.navigate("OtpVerification", {
-          username,
-          email,
-          password,
-          phoneno,
-          image: imageUrl,
-        });
-  
-        // Clear the form fields
-        setConfirmPassword("");
-        setEmail("");
-        setError({});
-        setPhoneno("");
-        setUsername("");
-        setPassword("");
-        setImage(null);
       } catch (error) {
-        console.error('Registration error:', error);
+        console.error("Registration error:", error);
         // Handle error (e.g., show error message to user)
-        setError({ api: 'Registration failed. Please try again.' });
+        setError({ api: "Registration failed. Please try again." });
       }
     }
   };
@@ -156,37 +157,40 @@ export default function SignupScreen() {
           style={[styles.image, { opacity: fadeAnim }]}
         />
       </View> */}
-      <Image source={image ? { uri: image } : {uri : staticContent.image}} style={styles.previewImage} />
-      <TouchableOpacity style={styles.newButton}  onPress={pickImage}>
-      <View style={styles.iconContainer}>
-        <Svg
-          aria-hidden="true"
-          stroke="currentColor"
-          strokeWidth="2"
-          viewBox="0 0 24 24"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-          style={styles.icon}
-        >
-          <Path
+      <Image
+        source={image ? { uri: image } : { uri: staticContent.image }}
+        style={styles.previewImage}
+      />
+      <TouchableOpacity style={styles.newButton} onPress={pickImage}>
+        <View style={styles.iconContainer}>
+          <Svg
+            aria-hidden="true"
+            stroke="currentColor"
             strokeWidth="2"
-            stroke="orange"
-            d="M13.5 3H12H8C6.34315 3 5 4.34315 5 6V18C5 19.6569 6.34315 21 8 21H11M13.5 3L19 8.625M13.5 3V7.625C13.5 8.17728 13.9477 8.625 14.5 8.625H19M19 8.625V11.8125"
-            strokeLinejoin="round"
-            strokeLinecap="round"
-          />
-          <Path
-            strokeLinejoin="round"
-            strokeLinecap="round"
-            strokeWidth="2"
-            stroke="orange"
-            d="M17 15V18M17 21V18M17 18H14M17 18H20"
-          />
-        </Svg>
-      </View>
-      <Text style={styles.newButtonText}>Upload Image</Text>
-    </TouchableOpacity>
-   
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            style={styles.icon}
+          >
+            <Path
+              strokeWidth="2"
+              stroke="#FF7B1C"
+              d="M13.5 3H12H8C6.34315 3 5 4.34315 5 6V18C5 19.6569 6.34315 21 8 21H11M13.5 3L19 8.625M13.5 3V7.625C13.5 8.17728 13.9477 8.625 14.5 8.625H19M19 8.625V11.8125"
+              strokeLinejoin="round"
+              strokeLinecap="round"
+            />
+            <Path
+              strokeLinejoin="round"
+              strokeLinecap="round"
+              strokeWidth="2"
+              stroke="#FF7B1C"
+              d="M17 15V18M17 21V18M17 18H14M17 18H20"
+            />
+          </Svg>
+        </View>
+        <Text style={styles.newButtonText}>Upload Image</Text>
+      </TouchableOpacity>
+
       <Text style={styles.title}>Create a New Account</Text>
       <View style={styles.inputContainer}>
         <TextInput
@@ -258,7 +262,7 @@ export default function SignupScreen() {
           <Text style={styles.loginLink}>Already have an account? Log in</Text>
         </TouchableOpacity>
       </View>
-      <StatusBar barStyle="dark-content" backgroundColor="orange" />
+      <StatusBar barStyle="light-content" backgroundColor="#481f8aff" />
     </View>
   );
 }
@@ -274,7 +278,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     marginBottom: 20,
     fontWeight: "bold",
-    color: "orange",
+    color: "#FF7B1C",
   },
   inputContainer: {
     width: "99%",
@@ -290,7 +294,7 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
   },
   button: {
-    backgroundColor: "orange",
+    backgroundColor: "#FF7B1C",
     paddingVertical: 10,
     borderRadius: 50,
     height: 50,
@@ -335,13 +339,13 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   uploadButton: {
-    backgroundColor: "orange",
+    backgroundColor: "#FF7B1C",
     padding: 10,
     borderRadius: 50,
-    height : 35,
-    width : 35,
-    alignContent : 'center',
-    alignItems : 'center'
+    height: 35,
+    width: 35,
+    alignContent: "center",
+    alignItems: "center",
   },
   uploadButtonText: {
     color: "white",
@@ -352,45 +356,45 @@ const styles = StyleSheet.create({
     height: 100,
     borderRadius: 45,
     marginTop: 10,
-    borderWidth : 1,
-    borderColor : 'grey'
+    borderWidth: 1,
+    borderColor: "grey",
   },
   newButton: {
-    border: 'none',
-    display: 'flex',
+    border: "none",
+    display: "flex",
     paddingVertical: 4,
     paddingHorizontal: 5,
-    backgroundColor: '#488aec',
-    backgroundColor: 'lightgrey',
-    color: '#ffffff',
+    backgroundColor: "#488aec",
+    backgroundColor: "lightgrey",
+    color: "#ffffff",
     fontSize: 12,
     lineHeight: 16,
-    fontWeight: '700',
-    textAlign: 'center',
-    cursor: 'pointer',
-    textTransform: 'uppercase',
-    verticalAlign: 'middle',
-    alignItems: 'center',
+    fontWeight: "700",
+    textAlign: "center",
+    cursor: "pointer",
+    textTransform: "uppercase",
+    verticalAlign: "middle",
+    alignItems: "center",
     borderRadius: 8,
-    userSelect: 'none',
+    userSelect: "none",
     gap: 12,
-    boxShadow: '0 4px 6px -1px #488aec31, 0 2px 4px -1px #488aec17',
-    transition: 'all 0.6s ease',
-    flexDirection: 'row',
+    boxShadow: "0 4px 6px -1px #488aec31, 0 2px 4px -1px #488aec17",
+    transition: "all 0.6s ease",
+    flexDirection: "row",
   },
   newButtonText: {
-    color: 'orange',
+    color: "#FF7B1C",
     fontSize: 12,
-    fontWeight: '700',
-    textTransform: 'uppercase',
+    fontWeight: "700",
+    textTransform: "uppercase",
   },
   iconContainer: {
     width: 20,
     height: 20,
   },
   icon: {
-    width: '100%',
-    height: '100%',
-    color : 'orange'
-  }
+    width: "100%",
+    height: "100%",
+    color: "#FF7B1C",
+  },
 });

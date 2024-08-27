@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect} from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
 import HomeScreen from "./src/screens/HomeScreen";
@@ -11,50 +11,105 @@ import LoginScreen from "./src/screens/LoginScreen";
 import SignupScreen from "./src/screens/SignUpScreen";
 import OtpVerificationForm from "./src/screens/OtpVerificationForm";
 import ImageUploadComponent from "./src/screens/ImageUploadComponent";
+import * as SecureStore from 'expo-secure-store';
+import {isTokenExpired} from './src/service/checkToken';
+import {regenerateToken} from './src/service/regenerateAccessToken';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import axios from "axios";
 
 const Stack = createStackNavigator();
 
 export default function App() {
+  const route = useRoute();
+  const [isLoggedIn, setIsLoggedIn] = useState(null | Boolean);
+  const [userToken, setUserToken] = useState(null);
+  const navigation = useNavigation();
+  const [isLoading, setIsLoading] = useState(true);
+  const [initialRoute, setInitialRoute] = useState("Login"); 
+  const [currentRoute, setCurrentRoute] = useState("Login");
+  useEffect(() => {
+    checkLoginStatus();
+  }, []);
+  const checkLoginStatus = async () => {
+    try {
+      const refreshToken = await SecureStore.getItemAsync('refreshToken');
+      if (refreshToken && !isTokenExpired(refreshToken)) {
+        const newAccessToken = await regenerateToken(refreshToken);
+        if (newAccessToken) {
+          await SecureStore.setItemAsync('accessToken', newAccessToken);
+          setInitialRoute("Home");
+        }
+      }
+    } catch (error) {
+      console.error("Error checking login status:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const shouldShowBottomBar = (routeName) => {
+    return !['Login', 'Signup'].includes(routeName);
+  };
   return (
     <SafeAreaView style={styles.viewStyle}>
       <Stack.Navigator
-        initialRouteName="Home"
+        initialRouteName={initialRoute}
         screenOptions={{
           headerShown: false,
-          // cardStyleInterpolator: ({ current: { progress } }) => ({
-          //   cardStyle: {
-          //     opacity: progress.interpolate({
-          //       inputRange: [0, 1],
-          //       outputRange: [0, 1],
-          //     }),
-          //     transform: [
-          //       {
-          //         translateX: progress.interpolate({
-          //           inputRange: [0, 1],
-          //           outputRange: [100, 0],
-          //         }),
-          //       },
-          //       {
-          //         translateY: progress.interpolate({
-          //           inputRange: [0, 1],
-          //           outputRange: [5000, 0],
-          //         }),
-          //       },
-          //     ],
-          //   },
-          // }),
         }}
       >
-        <Stack.Screen name="Home" component={HomeScreen} />
-        <Stack.Screen name="Profile" component={ProfileScreen} />
-        <Stack.Screen name="Search" component={SearchScreen} />
-        <Stack.Screen name="Login" component={LoginScreen} />
-        <Stack.Screen name="Signup" component={SignupScreen}/>
-        <Stack.Screen name="ImageUpload" component={ImageUploadComponent}/>
-        <Stack.Screen name="OtpVerification" component={OtpVerificationForm}></Stack.Screen>
+        <Stack.Screen 
+            name="Home" 
+            component={HomeScreen}
+            listeners={{
+              focus: () => setCurrentRoute("Home")
+            }}
+          />
+          <Stack.Screen 
+            name="Profile" 
+            component={ProfileScreen}
+            listeners={{
+              focus: () => setCurrentRoute("Profile")
+            }}
+          />
+          <Stack.Screen 
+            name="Search" 
+            component={SearchScreen}
+            listeners={{
+              focus: () => setCurrentRoute("Search")
+            }}
+          />
+          <Stack.Screen 
+            name="ImageUpload" 
+            component={ImageUploadComponent}
+            listeners={{
+              focus: () => setCurrentRoute("ImageUpload")
+            }}
+          />
+          <Stack.Screen 
+            name="OtpVerification" 
+            component={OtpVerificationForm}
+            listeners={{
+              focus: () => setCurrentRoute("OtpVerification")
+            }}
+          />
+          <Stack.Screen 
+            name="Login" 
+            component={LoginScreen}
+            listeners={{
+              focus: () => setCurrentRoute("Login")
+            }}
+          />
+          <Stack.Screen 
+            name="Signup" 
+            component={SignupScreen}
+            listeners={{
+              focus: () => setCurrentRoute("Signup")
+            }}
+          />
       </Stack.Navigator>
-      <BottomNavigationBar />
-      <StatusBar barStyle="dark-content" backgroundColor="white" />
+      {shouldShowBottomBar(currentRoute) && <BottomNavigationBar />}
+      <StatusBar barStyle="light-content" backgroundColor="#481f8aff" />
     </SafeAreaView>
   );
 }

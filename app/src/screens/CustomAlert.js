@@ -48,7 +48,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 15,
-    color: 'orange',
+    color: '#FF7B1C',
   },
   alertMessage: {
     marginBottom: 15,
@@ -56,7 +56,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   alertButton: {
-    backgroundColor: 'orange',
+    backgroundColor: '#FF7B1C',
     borderRadius: 10,
     padding: 10,
     elevation: 2,

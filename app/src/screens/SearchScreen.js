@@ -151,7 +151,7 @@ export default function SearchScreen() {
     <SafeAreaView style={styles.container}>
       <Text style={styles.headerText}>Exploring Indian Photographers: {category}</Text>
       <Dropdown
-        style={[styles.dropdown, isFocus && { borderColor: "orange" }]}
+        style={[styles.dropdown, isFocus && { borderColor: "#FF7B1C" }]}
         placeholderStyle={styles.placeholderStyle}
         selectedTextStyle={styles.selectedTextStyle}
         inputSearchStyle={styles.inputSearchStyle}
@@ -169,7 +169,7 @@ export default function SearchScreen() {
         onChange={handleCategoryChange}
       />
       {loading ? (
-        <ActivityIndicator size="large" color="orange" />
+        <ActivityIndicator size="large" color="#FF7B1C" />
       ) : (
         <FlatList
           data={photos}
@@ -211,7 +211,7 @@ export default function SearchScreen() {
           </View>
         </TouchableWithoutFeedback>
       </Modal>
-      <StatusBar barStyle="dark-content" backgroundColor="orange" />
+      <StatusBar barStyle="light-content" backgroundColor="#481f8aff" />
     </SafeAreaView>
   );
 }
