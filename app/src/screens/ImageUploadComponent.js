@@ -9,13 +9,14 @@ import {
   useWindowDimensions,
   TouchableOpacity,
   StyleSheet,
+  SafeAreaView,
   TextInput,
   Modal,
   ScrollView,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
-import CustomAlert from './CustomAlert';
+import CustomAlert from "./CustomAlert";
 
 const CLOUD_NAME = "ds82yb1db";
 const UPLOAD_PRESET = "ariki7qa";
@@ -50,8 +51,8 @@ export default function ImageUploadComponent() {
   const [description, setDescription] = useState("");
   const [genre, setGenre] = useState("");
   const [alertVisible, setAlertVisible] = useState(false);
-  const [alertTitle, setAlertTitle] = useState('');
-  const [alertMessage, setAlertMessage] = useState('');
+  const [alertTitle, setAlertTitle] = useState("");
+  const [alertMessage, setAlertMessage] = useState("");
 
   const showAlert = (title, message) => {
     setAlertTitle(title);
@@ -73,7 +74,7 @@ export default function ImageUploadComponent() {
       }
     } catch (error) {
       // Alert.alert("Error", "Failed to pick image: " + error.message);
-      showAlert('Error', 'Upload failed: ' + error.message);
+      showAlert("Error", "Upload failed: " + error.message);
     }
   }, []);
 
@@ -94,7 +95,7 @@ export default function ImageUploadComponent() {
   const uploadImage = useCallback(async () => {
     if (!image) {
       // Alert.alert("Please select an image first");
-      showAlert('Error', 'Please select an image first');
+      showAlert("Error", "Please select an image first");
       return;
     }
 
@@ -121,14 +122,14 @@ export default function ImageUploadComponent() {
       const data = await response.json();
 
       if (response.ok) {
-        showAlert('Success', 'Image uploaded successfully');
+        showAlert("Success", "Image uploaded successfully");
       } else {
         throw new Error(data.error?.message || "Upload failed");
       }
     } catch (error) {
       console.error("Upload error:", error);
       // Alert.alert("Error", "Upload failed: " + error.message);
-      showAlert('Error', 'Upload failed: ' + error.message);
+      showAlert("Error", "Upload failed: " + error.message);
     } finally {
       setIsUploading(false);
     }
@@ -136,12 +137,12 @@ export default function ImageUploadComponent() {
 
   const refreshPage = useCallback(() => {
     setImage(null);
-    setDescription('');
-    setGenre('');
+    setDescription("");
+    setGenre("");
   }, []);
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <TopBar
         image={image}
         onCancel={cancelImage}
@@ -163,8 +164,8 @@ export default function ImageUploadComponent() {
         message={alertMessage}
         onClose={closeAlert}
       />
-      <StatusBar barStyle="dark-content" backgroundColor="orange" />
-    </View>
+      <StatusBar barStyle="light-content" backgroundColor="#481f8aff" />
+    </SafeAreaView>
   );
 }
 
@@ -177,14 +178,16 @@ const TopBar = ({ image, onCancel, onUpload, isUploading }) => (
           disabled={isUploading}
           style={[styles.button, styles.cancelButton]}
         >
-          <Text>Cancel Post</Text>
+          <Text style={{ color: "#481f8aff" }}>Cancel Post</Text>
         </TouchableOpacity>
         <TouchableOpacity
           onPress={onUpload}
           disabled={isUploading}
           style={[styles.button, styles.postButton]}
         >
-          <Text>{isUploading ? "Uploading..." : "Post"}</Text>
+          <Text style={{ color: "#481f8aff" }}>
+            {isUploading ? "Uploading..." : "Post"}
+          </Text>
         </TouchableOpacity>
       </>
     )}
@@ -237,7 +240,9 @@ const MainContent = ({
             image ? styles.reselectButton : styles.pickButton,
           ]}
         >
-          <Text>{image ? "Reselect Image" : "Pick Image"}</Text>
+          <Text style={{ color: "#481f8aff" }}>
+            {image ? "Reselect Image" : "Pick Image"}
+          </Text>
         </TouchableOpacity>
       </View>
       <Modal
@@ -269,16 +274,117 @@ const MainContent = ({
   );
 };
 
+//   container: {
+//     flex: 1,
+//     alignItems: "center",
+//     justifyContent: "center",
+//   },
+//   topBar: {
+//     width: "100%",
+//     // height: "7%",
+//     backgroundColor: "#f9f9f9",
+//     justifyContent: "space-between",
+//     flexDirection: "row",
+//     padding: 8,
+//     position: "absolute",
+//     top: 0,
+//     zIndex: 1000,
+//   },
+//   descriptionInput: {
+//     width: "90%",
+//     height: 100,
+//     borderColor: "#FF7B1C",
+//     borderWidth: 1,
+//     borderRadius: 10,
+//     padding: 10,
+//     marginTop: 10,
+//     textAlignVertical: "top",
+//   },
+//   genreDropdown: {
+//     width: "90%",
+//     height: 40,
+//     borderColor: "#FF7B1C",
+//     borderWidth: 1,
+//     borderRadius: 10,
+//     padding: 10,
+//     marginTop: 10,
+//     justifyContent: "center",
+//   },
+//   genreDropdownText: {
+//     color: "black",
+//   },
+//   modalContainer: {
+//     flex: 1,
+//     justifyContent: "center",
+//     alignItems: "center",
+//     backgroundColor: "rgba(0, 0, 0, 0.5)",
+//   },
+//   modalContent: {
+//     width: "80%",
+//     maxHeight: "80%",
+//     backgroundColor: "white",
+//     borderRadius: 10,
+//     padding: 20,
+//   },
+//   genreItem: {
+//     padding: 15,
+//     borderBottomWidth: 1,
+//     borderBottomColor: "#eee",
+//   },
+//   genreItemText: {
+//     fontSize: 16,
+//     color: "black",
+//   },
+//   mainPostView: {
+//     marginTop: 100,
+//     flex: 1,
+//     alignItems: "center",
+//     width: "100%",
+//   },
+//   previewImage: {
+//     width: 300,
+//     height: 200,
+//     marginTop: 10,
+//     borderRadius: 20,
+//   },
+//   buttonContainer: {
+//     height: 60,
+//     justifyContent: "center",
+//     flexDirection: "row",
+//     padding: 8,
+//     marginTop: 10,
+//   },
+//   button: {
+//     padding: 10,
+//     borderRadius: 10,
+//     height: 40,
+//     width: 120,
+//     justifyContent: "center",
+//     alignItems: "center",
+//   },
+//   pickButton: {
+//     backgroundColor: "#FF7B1C",
+//   },
+//   reselectButton: {
+//     backgroundColor: "#FFA500",
+//   },
+//   cancelButton: {
+//     backgroundColor: "lightgrey",
+//   },
+//   postButton: {
+//     backgroundColor: "#19a8ff",
+//   },
+// });
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
+    backgroundColor: "#F2F2F5", // antiflash-white
   },
   topBar: {
     width: "100%",
-    // height: "7%",
-    backgroundColor: "#f9f9f9",
+    backgroundColor: "#9E95E5", // tropical-indigo
     justifyContent: "space-between",
     flexDirection: "row",
     padding: 8,
@@ -289,47 +395,50 @@ const styles = StyleSheet.create({
   descriptionInput: {
     width: "90%",
     height: 100,
-    borderColor: "orange",
+    borderColor: "#FF7B1C", // pumpkin (primary color)
     borderWidth: 1,
     borderRadius: 10,
     padding: 10,
     marginTop: 10,
     textAlignVertical: "top",
+    backgroundColor: "#F2F2F5", // antiflash-white
+    color: "#481F8A", // tekhelet
   },
   genreDropdown: {
     width: "90%",
     height: 40,
-    borderColor: "orange",
+    borderColor: "#FF7B1C", // pumpkin (primary color)
     borderWidth: 1,
     borderRadius: 10,
     padding: 10,
     marginTop: 10,
     justifyContent: "center",
+    backgroundColor: "#F2F2F5", // antiflash-white
   },
   genreDropdownText: {
-    color: "black",
+    color: "#481F8A", // tekhelet
   },
   modalContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    backgroundColor: "rgba(72, 31, 138, 0.5)", // tekhelet with opacity
   },
   modalContent: {
     width: "80%",
     maxHeight: "80%",
-    backgroundColor: "white",
+    backgroundColor: "#F2F2F5", // antiflash-white
     borderRadius: 10,
     padding: 20,
   },
   genreItem: {
     padding: 15,
     borderBottomWidth: 1,
-    borderBottomColor: "#eee",
+    borderBottomColor: "#C4BDEF", // periwinkle
   },
   genreItemText: {
     fontSize: 16,
-    color: "black",
+    color: "#481F8A", // tekhelet
   },
   mainPostView: {
     marginTop: 100,
@@ -342,6 +451,8 @@ const styles = StyleSheet.create({
     height: 200,
     marginTop: 10,
     borderRadius: 20,
+    borderWidth: 2,
+    borderColor: "#FF7B1C", // pumpkin (primary color)
   },
   buttonContainer: {
     height: 60,
@@ -359,15 +470,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   pickButton: {
-    backgroundColor: "orange",
+    backgroundColor: "#FF7B1C", // pumpkin (primary color)
   },
   reselectButton: {
-    backgroundColor: "#FFA500",
+    backgroundColor: "#9E95E5", // tropical-indigo
   },
   cancelButton: {
-    backgroundColor: "lightgrey",
+    backgroundColor: "#C4BDEF", // periwinkle
   },
   postButton: {
-    backgroundColor: "#19a8ff",
+    backgroundColor: "#FF7B1C", // pumpkin (primary color)
   }
 });

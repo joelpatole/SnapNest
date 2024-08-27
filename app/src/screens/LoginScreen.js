@@ -16,6 +16,9 @@ import {
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import SignUpScreen from "./SignUpScreen";
 import file from "../../internal_assets/internal_images/file2.0.png";
+import axios from "axios";
+import { BASE_URL } from "../constants/constants";
+import * as SecureStore from 'expo-secure-store';
 
 export default function LoginScreen() {
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -24,14 +27,14 @@ export default function LoginScreen() {
     image:
       "https://images.pexels.com/photos/15994858/pexels-photo-15994858/free-photo-of-vintage-zorki-camera.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
   };
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error , setError] = useState({});
   const windowWidth = useWindowDimensions().width;
   const validateForm = ()=>{
     let errors = {}
 
-    if (!username) errors.username = "Username is required";
+    if (!email) errors.email = "Username is required";
     if(!password) errors.password = "Password is required";
     setError(errors);
 
@@ -42,24 +45,43 @@ export default function LoginScreen() {
   const navigateToSignUp = () => {
     navigation.navigate("Signup"); // Navigate to SignUpScreen
   };
-  const handleLogin = () => {
-    // Handle login logic here
-    // console.log("Username:", username);
-    // console.log("Password:", password);
-    // alert(
-    //   JSON.stringify({
-    //     username: username,
-    //     password: password,
-    //   })
-    // );
-    if(validateForm()){
-      console.log("Subbmited", username, password);
-      alert("Submitted Form");
-      setError({});
-      setPassword("");
-      setUsername("");
+
+  const handleLogin = async () => {
+    if (validateForm()) {
+      const payload = {
+        email: email,
+        password: password,
+      };
+      try {
+        const response = await axios.post(`${BASE_URL}/api/auth/login`, payload);
+        console.log("Login",response.data);
+  
+        if (response.data.token) {
+          // Store the token
+          await SecureStore.setItemAsync('userToken', response.data.token);
+          await SecureStore.setItemAsync('refreshToken', response.data.refreshToken);
+          console.log("Token stored successfully");
+
+          navigation.reset({
+            index: 0,
+            routes: [{ name: 'Home' }],
+          });
+  
+          // Clear the form
+          setError({});
+          setPassword("");
+          setEmail("");
+        } else {
+          console.log("Login failed: No token received");
+          // Handle login failure (e.g., show an error message)
+        }
+      } catch (error) {
+        console.error("Login error:", error);
+        // Handle error (e.g., show an error message)
+      }
     }
   };
+  
 
   useFocusEffect(
     React.useCallback(() => {
@@ -75,6 +97,7 @@ export default function LoginScreen() {
   );
 
   return (
+    <>
     <KeyboardAvoidingView
       behavior="padding"
       keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
@@ -84,40 +107,43 @@ export default function LoginScreen() {
         <Animated.Image
           source={file}
           style={[styles.image, { opacity: fadeAnim }]}
-        ></Animated.Image>
+        />
       </View>
-      <Text style={styles.title}>Welcom to Pixolity!</Text>
+      <Text style={styles.title}>Welcome to SanpNest!</Text>
       <View style={styles.inputContainer}>
         <TextInput
-          style={[styles.input,{ width: windowWidth > 400 ? "40%" : "90%" }]}
-          placeholder="Username"
-          value={username}
-          onChangeText={setUsername}
+          style={[styles.input, { width: windowWidth > 400 ? "40%" : "90%" }]}
+          placeholder="Email"
+          placeholderTextColor="#9E95E5"
+          value={email}
+          onChangeText={setEmail}
         />
-        {error.username ? <Text style={styles.errorText}>{error.username}</Text> : null}
+        {error.email ? <Text style={styles.errorText}>{error.email}</Text> : null}
         <TextInput
-          style={[styles.input,{ width: windowWidth > 400 ? "40%" : "90%" }]}
+          style={[styles.input, { width: windowWidth > 400 ? "40%" : "90%" }]}
           placeholder="Password"
+          placeholderTextColor="#9E95E5"
           value={password}
           onChangeText={setPassword}
           secureTextEntry
         />
-         {error.password ? <Text style={styles.errorText}>{error.password}</Text> : null}
-        <TouchableOpacity style={[styles.button,{ width: windowWidth > 400 ? "40%" : "90%" }]} onPress={handleLogin}>
+        {error.password ? <Text style={styles.errorText}>{error.password}</Text> : null}
+        <TouchableOpacity style={[styles.button, { width: windowWidth > 400 ? "40%" : "90%" }]} onPress={handleLogin}>
           <Text style={styles.buttonText}>Login</Text>
         </TouchableOpacity>
         <TouchableOpacity>
-          <Text style={styles.forgotPassword}>Forgot password ?</Text>
+          <Text style={styles.forgotPassword}>Forgot password?</Text>
         </TouchableOpacity>
       </View>
       <TouchableOpacity
-        style={[styles.registerButton,{ width: windowWidth > 400 ? "40%" : "90%" }]}
+        style={[styles.registerButton, { width: windowWidth > 400 ? "40%" : "90%" }]}
         onPress={navigateToSignUp}
       >
         <Text style={styles.registerButtonText}>Register New Account</Text>
       </TouchableOpacity>
-      <StatusBar barStyle="dark-content" backgroundColor="orange" />
     </KeyboardAvoidingView>
+    <StatusBar barStyle="light-content" backgroundColor="#481f8aff" />
+    </>
   );
 }
 
@@ -126,13 +152,13 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#f8f8f8",
+    backgroundColor: "#F2F2F5", // antiflash-white
   },
   title: {
-    fontSize: 20,
+    fontSize: 24,
     marginBottom: 20,
     fontWeight: "bold",
-    color: "orange",
+    color: "#481F8A", // tekhelet
   },
   inputContainer: {
     width: "99%",
@@ -140,25 +166,24 @@ const styles = StyleSheet.create({
   },
   input: {
     height: 50,
-    borderColor: "gray",
+    borderColor: "#9E95E5", // tropical-indigo
     borderWidth: 1,
     borderRadius: 50,
     marginBottom: 5,
     paddingHorizontal: 10,
-    backgroundColor: "white",
-    width: "90%",
+    backgroundColor: "#FFFFFF",
+    color: "#481F8A", // tekhelet
   },
   button: {
-    backgroundColor: "orange",
+    backgroundColor: "#FF7B1C", // pumpkin (primary)
     paddingVertical: 10,
     borderRadius: 50,
     height: 50,
-    width: "90%",
     justifyContent: "center",
     alignItems: "center",
   },
   buttonText: {
-    color: "white",
+    color: "#FFFFFF",
     textAlign: "center",
     fontWeight: "bold",
   },
@@ -166,11 +191,12 @@ const styles = StyleSheet.create({
     fontSize: 13,
     margin: 12,
     fontWeight: "bold",
+    color: "#481F8A", // tekhelet
   },
   registerButton: {
-    backgroundColor: "trasnparent",
+    backgroundColor: "transparent",
     borderWidth: 1,
-    width: "90%",
+    borderColor: "#FF7B1C", // pumpkin (primary)
     height: 50,
     justifyContent: "center",
     alignItems: "center",
@@ -179,7 +205,7 @@ const styles = StyleSheet.create({
     bottom: "-9.5%",
   },
   registerButtonText: {
-    color: "orange",
+    color: "#FF7B1C", // pumpkin (primary)
     fontWeight: "600",
   },
   imageView: {
@@ -189,6 +215,7 @@ const styles = StyleSheet.create({
     width: 130,
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: "transparent", // periwinkle
   },
   image: {
     width: 350,
@@ -198,10 +225,10 @@ const styles = StyleSheet.create({
     marginTop: 5,
     marginLeft: 5,
   },
-  errorText:{
-    fontSize:12,
-    color:'red',
-    marginRight:"40%",
-    marginBottom:10
+  errorText: {
+    fontSize: 12,
+    color: "#FF7B1C", // pumpkin (primary)
+    marginRight: "40%",
+    marginBottom: 10,
   }
 });
