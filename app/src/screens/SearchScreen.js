@@ -17,6 +17,8 @@ import {
   SafeAreaView,
   StatusBar
 } from "react-native";
+import axios from "axios";
+import { BASE_URL } from "../constants/constants";
 
 const PEXELS_API_KEY = "Fjo6cg2MqUOFck9dzPOVwLA0mITA1FRiPupYEUSTVyWkuHsnq8LliVZK";
 
@@ -86,6 +88,7 @@ export default function SearchScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState(null);
   const [isFocus, setIsFocus] = useState(false);
+  const [gener, setGener] = useState([]);
 
   const fetchPhotos = async (query) => {
     setLoading(true);
@@ -110,10 +113,25 @@ export default function SearchScreen() {
   };
 
   useEffect(() => {
-    const randomQuery = getRandomQuery();
-    setCategory(randomQuery);
-    fetchPhotos(randomQuery);
+    axios.get(`${BASE_URL}/api/gener/gener`).then(response => {
+        const generArray = response.data;
+        // const generArrayWithNameOnly = generArray.map(eachGener => {
+        //     return { name: eachGener.name, id: eachGener._id };
+        // });
+        setGener(generArray);
+
+        // Select a random query and fetch photos once the gener array is set
+        if (generArray.length > 0) {
+          const randomQuery = generArray[Math.floor(Math.random() * generArray.length)].name;
+          setCategory(randomQuery);
+          fetchPhotos(randomQuery);
+        }
+    }).catch(error => {
+        console.error("Error fetching gener data:", error);
+    });
   }, []);
+
+
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -145,7 +163,7 @@ export default function SearchScreen() {
   };
 
   // Convert exploringIndiaArray to dropdown-compatible data format
-  const dropdownData = exploringIndiaArray.map((item) => ({ label: item, value: item }));
+  const dropdownData = gener.map((item) => ({ label: item.displayName, value: item.name }));
 
   return (
     <SafeAreaView style={styles.container}>

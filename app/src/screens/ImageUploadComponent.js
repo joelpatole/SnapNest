@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import {
   View,
   Image,
@@ -17,10 +17,12 @@ import {
 import * as ImagePicker from "expo-image-picker";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import CustomAlert from "./CustomAlert";
+import axios from "axios";
+import { BASE_URL } from "../constants/constants";
 
 const CLOUD_NAME = "ds82yb1db";
 const UPLOAD_PRESET = "ariki7qa";
-const photographyGenres = [
+const photographyGenresStatic = [
   "Portrait Photography",
   "Landscape Photography",
   "Street Photography",
@@ -204,6 +206,17 @@ const MainContent = ({
   setGenre,
 }) => {
   const [showDropdown, setShowDropdown] = useState(false);
+  const [photographyGenres, setPhotographyGenres] = useState([]);
+
+  useEffect(() => {
+    axios.get(`${BASE_URL}/api/gener/gener`)
+      .then((response) => {
+        setPhotographyGenres(response.data);
+      })
+      .catch((error) => {
+        console.error("Error fetching gener data:", error);
+      });
+  }, []);
 
   return (
     <View style={styles.mainPostView}>
@@ -229,7 +242,7 @@ const MainContent = ({
         onPress={() => setShowDropdown(true)}
       >
         <Text style={styles.genreDropdownText}>
-          {genre || "Select a genre"}
+          {genre?.name || "Select a genre"}
         </Text>
       </TouchableOpacity>
       <View style={[styles.buttonContainer, { width: windowWidth }]}>
@@ -263,7 +276,8 @@ const MainContent = ({
                     setShowDropdown(false);
                   }}
                 >
-                  <Text style={styles.genreItemText}>{item}</Text>
+                  {/* Display the name of the genre */}
+                  <Text style={styles.genreItemText}>{item.displayName}</Text>
                 </TouchableOpacity>
               ))}
             </ScrollView>
@@ -273,6 +287,7 @@ const MainContent = ({
     </View>
   );
 };
+
 
 //   container: {
 //     flex: 1,
