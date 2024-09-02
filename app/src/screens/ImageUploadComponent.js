@@ -19,6 +19,9 @@ import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import CustomAlert from "./CustomAlert";
 import axios from "axios";
 import { BASE_URL } from "../constants/constants";
+import * as SecureStore from 'expo-secure-store';
+import { jwtDecode } from "jwt-decode";
+
 
 const CLOUD_NAME = "ds82yb1db";
 const UPLOAD_PRESET = "ariki7qa";
@@ -45,6 +48,9 @@ const photographyGenresStatic = [
   "Underwater Photography",
 ];
 
+
+
+
 export default function ImageUploadComponent() {
   const navigation = useNavigation();
   const [image, setImage] = useState(null);
@@ -55,11 +61,64 @@ export default function ImageUploadComponent() {
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertTitle, setAlertTitle] = useState("");
   const [alertMessage, setAlertMessage] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
+  const [postPayload, setPostPayload] = useState({});
+
+  useEffect(()=>{
+    async function random() {
+      if(postPayload.userId && postPayload.imageUrl){
+        const post = await axios.post(`${BASE_URL}/api/post/new-post`, postPayload)
+        console.log("POST", post);
+      }
+    }
+
+    random()
+  },[postPayload])
+
+  useEffect(()=>{
+    async function payloadCreator() {
+      setPostPayload(await createPayload(imageUrl, genre)) 
+    }
+
+    payloadCreator();
+  }, [imageUrl])
 
   const showAlert = (title, message) => {
     setAlertTitle(title);
     setAlertMessage(message);
     setAlertVisible(true);
+  };
+
+  const createPayload = async (image, gener) => {
+    try {
+      // Fetch the token from SecureStore
+      const userToken = await SecureStore.getItemAsync('userToken');
+      console.log('userToken:', userToken);
+      
+      if (userToken) {
+        // Decode the token
+        const decodedToken = jwtDecode(userToken);
+        console.log('Decoded Token:', decodedToken);
+        
+        // Extract userId from the decoded token
+        const userId = decodedToken.userId; // Adjust this depending on the structure of your token
+  
+        // Construct the payload
+        const payload = {
+          imageUrl: image, // Use the image URL returned from Cloudinary
+          userId: userId,
+          description: description,
+          genreId: gener
+        };
+  
+        console.log('Payload in createPayload:', payload);
+        return payload;
+      } else {
+        console.error('No user token found');
+      }
+    } catch (error) {
+      console.error('Error fetching user ID or constructing payload:', error);
+    }
   };
 
   const pickImage = useCallback(async () => {
@@ -122,6 +181,7 @@ export default function ImageUploadComponent() {
       });
 
       const data = await response.json();
+      setImageUrl(data.url);
 
       if (response.ok) {
         showAlert("Success", "Image uploaded successfully");
