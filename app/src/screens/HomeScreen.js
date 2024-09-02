@@ -5,7 +5,7 @@ import axios from 'axios';
 import { BASE_URL } from '../constants/constants';
 import Post from './Post';
 
-const ITEMS_PER_PAGE = 90; // Number of posts to load per page
+const ITEMS_PER_PAGE = 4; // Number of posts to load per page
 
 export default function HomeScreen() {
   const [fontLoaded, setFontLoaded] = useState(false);

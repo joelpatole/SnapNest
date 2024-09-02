@@ -21,7 +21,7 @@ const Post = ({ profileImage, username, postImage, date, description, likesCount
           <TouchableOpacity style={styles.actionButton}>
             <Ionicons name="chatbubble-outline" size={24} color="white" />
           </TouchableOpacity>
-          <Text style={styles.actionCount}>56</Text>
+          <Text style={styles.actionCount}>{sharesCount}</Text>
         </View>
         <View style={styles.actionItem}>
           <TouchableOpacity style={styles.actionButton}>
