@@ -5,7 +5,7 @@ import { jwtDecode } from "jwt-decode";
 import * as SecureStore from 'expo-secure-store';
 import axios from "axios";
 import { BASE_URL } from "../constants/constants";
-import { useNavigation, useFocusEffect } from "@react-navigation/native";
+import { useNavigation, useFocusEffect, CommonActions } from "@react-navigation/native";
 
 //decode auth token
 //from that auth token get userDetails or userId
@@ -13,6 +13,19 @@ import { useNavigation, useFocusEffect } from "@react-navigation/native";
 const ProfileScreen = () => {
   const navigation = useNavigation();
   const [user, setUser] = useState({});
+
+  const profile = async()=>{
+    try{
+      navigation.dispatch(
+        CommonActions.navigate({
+          name: 'ProfileNew',
+          params: { userId: user._id },
+        })
+      );
+    }catch(error){
+      console.error('Error:', error);
+    }
+  }
   const logout = async () => {
     try {
       // Delete the stored token
@@ -54,14 +67,6 @@ const ProfileScreen = () => {
     checkUserLoginStatus();
   }, []);
 
-  // const user = {
-  //   profilePicture:
-  //     "https://media.licdn.com/dms/image/C4D03AQFM5KuLN9z1Tg/profile-displayphoto-shrink_800_800/0/1659497455610?e=1726099200&v=beta&t=ftKLZxdXjVA3NAw6gpCekJLLtWw01-3lVwsevol2ldA",
-  //   name: "Joel Richard Patole",
-  //   mobile: "+917040856403",
-  //   email: "joel@example.com",
-  // };
-
   return (
     <View style={styles.container}>
       <View style={styles.profileImageContainer}>
@@ -74,15 +79,23 @@ const ProfileScreen = () => {
       <View style={styles.infoContainer}>
         <Text style={styles.label}>Mobile No:</Text>
         <Text style={styles.info}>{user.mobile}</Text>
-      </View>
+      </View >
       <View style={styles.infoContainer}>
         <Text style={styles.label}>Email:</Text>
         <Text style={styles.info}>{user.email}</Text>
       </View>
+      <View style={styles.infoContainerTwo}>
+      <TouchableOpacity 
+      onPress={profile}
+      style={[styles.button, styles.profileButton]}
+      ><Text style={styles.logoutText}>View Profile</Text>
+      </TouchableOpacity>
       <TouchableOpacity 
       onPress={logout}
       style={[styles.button, styles.logoutButton]}
-      ><Text style={styles.logoutText}>Logout</Text></TouchableOpacity>
+      ><Text style={styles.logoutText}>Logout</Text>
+      </TouchableOpacity>
+      </View>
       <StatusBar barStyle="light-content" backgroundColor="#481f8aff" />
     </View>
   );
@@ -156,7 +169,20 @@ const styles = StyleSheet.create({
   },
   logoutText:{
     color : 'white'
-  }
+  },
+  profileButton: {
+    backgroundColor: "indigo", // pumpkin (primary color)
+  },
+  infoContainerTwo: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 10,
+    backgroundColor: "transparent",
+    borderRadius: 10,
+    justifyContent : 'space-between',
+    padding: 7,
+    width: "100%",
+  },
 });
 
 export default ProfileScreen;

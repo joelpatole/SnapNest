@@ -3,7 +3,6 @@ import {
   View,
   Image,
   StatusBar,
-  Alert,
   Platform,
   Text,
   useWindowDimensions,
@@ -15,41 +14,15 @@ import {
   ScrollView,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
-import { useNavigation, useFocusEffect } from "@react-navigation/native";
+import { useNavigation } from "@react-navigation/native";
 import CustomAlert from "./CustomAlert";
 import axios from "axios";
 import { BASE_URL } from "../constants/constants";
-import * as SecureStore from 'expo-secure-store';
+import * as SecureStore from "expo-secure-store";
 import { jwtDecode } from "jwt-decode";
-
 
 const CLOUD_NAME = "ds82yb1db";
 const UPLOAD_PRESET = "ariki7qa";
-const photographyGenresStatic = [
-  "Portrait Photography",
-  "Landscape Photography",
-  "Street Photography",
-  "Wildlife Photography",
-  "Macro Photography",
-  "Fashion Photography",
-  "Sports Photography",
-  "Architectural Photography",
-  "Event Photography",
-  "Travel Photography",
-  "Food Photography",
-  "Black and White Photography",
-  "Aerial Photography",
-  "Astrophotography",
-  "Documentary Photography",
-  "Product Photography",
-  "Conceptual Photography",
-  "Fine Art Photography",
-  "Abstract Photography",
-  "Underwater Photography",
-];
-
-
-
 
 export default function ImageUploadComponent() {
   const navigation = useNavigation();
@@ -61,27 +34,21 @@ export default function ImageUploadComponent() {
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertTitle, setAlertTitle] = useState("");
   const [alertMessage, setAlertMessage] = useState("");
-  const [imageUrl, setImageUrl] = useState("");
-  const [postPayload, setPostPayload] = useState({});
+  const [photographyGenres, setPhotographyGenres] = useState([]);
 
-  useEffect(()=>{
-    async function random() {
-      if(postPayload.userId && postPayload.imageUrl){
-        const post = await axios.post(`${BASE_URL}/api/post/new-post`, postPayload)
-        console.log("POST", post);
-      }
+  useEffect(() => {
+    fetchGenres();
+  }, []);
+
+  const fetchGenres = async () => {
+    try {
+      const response = await axios.get(`${BASE_URL}/api/gener/gener`);
+      setPhotographyGenres(response.data);
+    } catch (error) {
+      console.error("Error fetching gener data:", error);
+      showAlert("Error", "Failed to fetch genres");
     }
-
-    random()
-  },[postPayload])
-
-  useEffect(()=>{
-    async function payloadCreator() {
-      setPostPayload(await createPayload(imageUrl, genre)) 
-    }
-
-    payloadCreator();
-  }, [imageUrl])
+  };
 
   const showAlert = (title, message) => {
     setAlertTitle(title);
@@ -89,36 +56,13 @@ export default function ImageUploadComponent() {
     setAlertVisible(true);
   };
 
-  const createPayload = async (image, gener) => {
-    try {
-      // Fetch the token from SecureStore
-      const userToken = await SecureStore.getItemAsync('userToken');
-      console.log('userToken:', userToken);
-      
-      if (userToken) {
-        // Decode the token
-        const decodedToken = jwtDecode(userToken);
-        console.log('Decoded Token:', decodedToken);
-        
-        // Extract userId from the decoded token
-        const userId = decodedToken.userId; // Adjust this depending on the structure of your token
-  
-        // Construct the payload
-        const payload = {
-          imageUrl: image, // Use the image URL returned from Cloudinary
-          userId: userId,
-          description: description,
-          genreId: gener
-        };
-  
-        console.log('Payload in createPayload:', payload);
-        return payload;
-      } else {
-        console.error('No user token found');
-      }
-    } catch (error) {
-      console.error('Error fetching user ID or constructing payload:', error);
-    }
+  const closeAlert = () => {
+    setAlertVisible(false);
+    navigateToHome();
+  };
+
+  const navigateToHome = () => {
+    navigation.navigate("Home");
   };
 
   const pickImage = useCallback(async () => {
@@ -134,8 +78,7 @@ export default function ImageUploadComponent() {
         setImage(result.assets[0].uri);
       }
     } catch (error) {
-      // Alert.alert("Error", "Failed to pick image: " + error.message);
-      showAlert("Error", "Upload failed: " + error.message);
+      showAlert("Error", "Failed to pick image: " + error.message);
     }
   }, []);
 
@@ -143,19 +86,25 @@ export default function ImageUploadComponent() {
     setImage(null);
   }, []);
 
-  const navigateToHome = () => {
-    navigation.navigate("Home");
-  };
+  const createPayload = async (imageUrl) => {
+    const userToken = await SecureStore.getItemAsync("userToken");
+    if (!userToken) {
+      throw new Error("No user token found");
+    }
 
-  const closeAlert = () => {
-    setAlertVisible(false);
-    // If you need to perform any action after closing the alert, do it here
-    navigateToHome();
+    const decodedToken = jwtDecode(userToken);
+    const userId = decodedToken.userId;
+
+    return {
+      imageUrl,
+      userId,
+      description,
+      genreId: genre, // Assuming genre object has an 'id' property
+    };
   };
 
   const uploadImage = useCallback(async () => {
     if (!image) {
-      // Alert.alert("Please select an image first");
       showAlert("Error", "Please select an image first");
       return;
     }
@@ -181,27 +130,21 @@ export default function ImageUploadComponent() {
       });
 
       const data = await response.json();
-      setImageUrl(data.url);
-
-      if (response.ok) {
-        showAlert("Success", "Image uploaded successfully");
-      } else {
+      if (!response.ok) {
         throw new Error(data.error?.message || "Upload failed");
       }
+
+      const payload = await createPayload(data.url);
+      await axios.post(`${BASE_URL}/api/post/new-post`, payload);
+
+      showAlert("Success", "Image uploaded and post created successfully");
     } catch (error) {
       console.error("Upload error:", error);
-      // Alert.alert("Error", "Upload failed: " + error.message);
       showAlert("Error", "Upload failed: " + error.message);
     } finally {
       setIsUploading(false);
     }
-  }, [image]);
-
-  const refreshPage = useCallback(() => {
-    setImage(null);
-    setDescription("");
-    setGenre("");
-  }, []);
+  }, [image, description, genre]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -219,6 +162,7 @@ export default function ImageUploadComponent() {
         setDescription={setDescription}
         genre={genre}
         setGenre={setGenre}
+        photographyGenres={photographyGenres}
       />
       <CustomAlert
         visible={alertVisible}
@@ -269,7 +213,8 @@ const MainContent = ({
   const [photographyGenres, setPhotographyGenres] = useState([]);
 
   useEffect(() => {
-    axios.get(`${BASE_URL}/api/gener/gener`)
+    axios
+      .get(`${BASE_URL}/api/gener/gener`)
       .then((response) => {
         setPhotographyGenres(response.data);
       })
@@ -347,7 +292,6 @@ const MainContent = ({
     </View>
   );
 };
-
 
 //   container: {
 //     flex: 1,
@@ -555,5 +499,5 @@ const styles = StyleSheet.create({
   },
   postButton: {
     backgroundColor: "#FF7B1C", // pumpkin (primary color)
-  }
+  },
 });

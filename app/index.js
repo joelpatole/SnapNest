@@ -16,6 +16,7 @@ import {isTokenExpired} from './src/service/checkToken';
 import {regenerateToken} from './src/service/regenerateAccessToken';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import axios from "axios";
+import Profile from "./src/screens/Profile";
 
 const Stack = createStackNavigator();
 
@@ -105,6 +106,13 @@ export default function App() {
             component={SignupScreen}
             listeners={{
               focus: () => setCurrentRoute("Signup")
+            }}
+          />
+          <Stack.Screen 
+            name="ProfileNew" 
+            component={Profile}
+            listeners={{
+              focus: () => setCurrentRoute("ProfileNew")
             }}
           />
       </Stack.Navigator>
