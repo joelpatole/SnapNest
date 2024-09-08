@@ -1,11 +1,20 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, StatusBar, FlatList, ActivityIndicator } from 'react-native';
-import * as Font from 'expo-font';
-import axios from 'axios';
-import { BASE_URL } from '../constants/constants';
-import Post from './Post';
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  StatusBar,
+  FlatList,
+  ActivityIndicator,
+  Dimensions,
+} from "react-native";
+import * as Font from "expo-font";
+import axios from "axios";
+import { BASE_URL } from "../constants/constants";
+import Post from "./Post";
 
 const ITEMS_PER_PAGE = 4; // Number of posts to load per page
+const screenHeight = Dimensions.get("window").height;
 
 export default function HomeScreen() {
   const [fontLoaded, setFontLoaded] = useState(false);
@@ -17,7 +26,7 @@ export default function HomeScreen() {
   useEffect(() => {
     async function loadFont() {
       await Font.loadAsync({
-        'Allura-Regular': require('../../internal_assets/internal_fonts/Allura-Regular.ttf'),
+        "Allura-Regular": require("../../internal_assets/internal_fonts/Allura-Regular.ttf"),
       });
       setFontLoaded(true);
     }
@@ -30,20 +39,25 @@ export default function HomeScreen() {
     if (loading || !hasMore) return;
     setLoading(true);
     try {
-      const response = await axios.get(`${BASE_URL}/api/post/posts/${page * ITEMS_PER_PAGE}`);
+      const response = await axios.get(
+        `${BASE_URL}/api/post/posts/${page * ITEMS_PER_PAGE}`
+      );
       if (response.data.length === 0) {
         setHasMore(false);
       } else {
-        setPosts(prevPosts => {
+        setPosts((prevPosts) => {
           const newPosts = response.data.filter(
-            newPost => !prevPosts.some(existingPost => existingPost._id === newPost._id)
+            (newPost) =>
+              !prevPosts.some(
+                (existingPost) => existingPost._id === newPost._id
+              )
           );
           return [...prevPosts, ...newPosts];
         });
-        setPage(prevPage => prevPage + 1);
+        setPage((prevPage) => prevPage + 1);
       }
     } catch (error) {
-      console.error('Error fetching posts:', error);
+      console.error("Error fetching posts:", error);
     } finally {
       setLoading(false);
     }
@@ -63,13 +77,23 @@ export default function HomeScreen() {
   );
 
   const renderFooter = () => {
-    if (loading) return <ActivityIndicator size="large" color="#481f8a" />;
-    if (!hasMore) return <Text style={styles.endMessage}>No more posts to load</Text>;
-    return null;
+    return (
+      <View style={styles.footer}>
+        <Text style={styles.footerText}>Footer Content</Text>
+        {loading && <ActivityIndicator size="large" color="#481f8a" />}
+        {!hasMore && (
+          <Text style={styles.endMessage}>No more posts to load</Text>
+        )}
+      </View>
+    );
   };
 
   if (!fontLoaded) {
-    return <View style={styles.loadingContainer}><ActivityIndicator size="large" color="#481f8a" /></View>;
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#481f8a" />
+      </View>
+    );
   }
 
   return (
@@ -93,25 +117,35 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#9e95e5',
+    backgroundColor: "#9e95e5",
   },
   headerText: {
-    fontFamily: 'Allura-Regular',
+    fontFamily: "Allura-Regular",
     fontSize: 32,
-    textAlign: 'center',
+    textAlign: "center",
     padding: 10,
-    backgroundColor: '#481f8a',
-    color: 'white',
+    backgroundColor: "#481f8a",
+    color: "white",
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#9e95e5',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#9e95e5",
   },
   endMessage: {
-    textAlign: 'center',
+    textAlign: "center",
     padding: 10,
-    color: '#481f8a',
-  }
+    color: "#481f8a",
+  },
+  footer: {
+    backgroundColor: "#481F8A",
+    height: screenHeight * 0.09, // 9% of screen height
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  footerText: {
+    color: "transparent",
+    fontSize: 16,
+  },
 });

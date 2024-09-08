@@ -2,6 +2,12 @@ import React from 'react';
 import { View, Image, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
+const formatDate = (dateString) => {
+  const date = new Date(dateString);
+  const options = { year: 'numeric', month: 'long', day: '2-digit' };
+  return date.toLocaleDateString('en-US', options);
+};
+
 const Post = ({ profileImage, username, postImage, date, description, likesCount, sharesCount }) => {
   return (
     <View style={styles.post}>
@@ -33,7 +39,7 @@ const Post = ({ profileImage, username, postImage, date, description, likesCount
       <View style={styles.date}>
         <Text style={styles.description}>{description}</Text>
         </View>
-      <Text style={styles.date}>{date}</Text>
+      <Text style={styles.date}>{formatDate(date)}</Text>
     </View>
   );
 };
