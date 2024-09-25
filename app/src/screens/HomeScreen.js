@@ -156,6 +156,8 @@ export default function HomeScreen() {
       description={item.description}
       likesCount={item.likesCount}
       sharesCount={item.sharesCount}
+      isOwnPost={item.isOwnPost}
+      isFollowing={item.isFollowing}
     />
   );
 

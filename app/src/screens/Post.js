@@ -8,6 +8,12 @@ const formatDate = (dateString) => {
   return date.toLocaleDateString("en-US", options);
 };
 
+const onFollow = () => {
+  // Call API to add user to followers list
+  alert("following");
+};
+
+
 const Post = ({
   profileImage,
   username,
@@ -26,9 +32,16 @@ const Post = ({
           <Image source={{ uri: profileImage }} style={styles.profileImage} />
           <Text style={styles.username}>{username}</Text>
         </View>
-        <TouchableOpacity style={[styles.button]}>
-          <Text style={{ color: "#4B0082", fontWeight: "bold" }}>Follow</Text>
-        </TouchableOpacity>
+        {!isOwnPost &&
+          (isFollowing ? (
+            <View style={styles.followingContainer}>
+              <Text style={styles.followingText}>Following</Text>
+            </View>
+          ) : (
+            <TouchableOpacity style={styles.button} onPress={onFollow}>
+              <Text style={{ color: "#4B0082", fontWeight: "bold" }}>Follow</Text>
+            </TouchableOpacity>
+          ))}
       </View>
       <Image source={{ uri: postImage }} style={styles.postImage} />
       <View style={styles.actions}>
@@ -138,6 +151,24 @@ const styles = StyleSheet.create({
     borderRadius: 9,
     backgroundColor: "#ffa500",
     marginRight: "5px",
+  },
+  followButton: {
+    backgroundColor: '#007bff',
+    padding: 10,
+    borderRadius: 5,
+  },
+  followText: {
+    color: '#fff',
+    textAlign: 'center',
+  },
+  followingContainer: {
+    backgroundColor: '#d3d3d3', // Light grey background
+    padding: 10,
+    borderRadius: 5,
+  },
+  followingText: {
+    color: '#555', // Darker grey text
+    textAlign: 'center',
   },
 });
 
