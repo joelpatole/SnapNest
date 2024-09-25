@@ -9,6 +9,7 @@ import {
   Dimensions,
 } from "react-native";
 import * as Font from "expo-font";
+import * as SecureStore from "expo-secure-store";
 import axios from "axios";
 import { BASE_URL } from "../constants/constants";
 import Post from "./Post";
@@ -35,13 +36,67 @@ export default function HomeScreen() {
     fetchPosts();
   }, []);
 
+  // const fetchPosts = async () => {
+  //   if (loading || !hasMore) return;
+  //   setLoading(true);
+  //   try {
+  //     const token = await SecureStore.getItemAsync("userToken");
+  //     if (!token) {
+  //       throw new Error("No authentication token found");
+  //     }
+  //     console.log(token);
+
+  //     const response = await axios.get(`${BASE_URL}/api/post/posts`, {
+  //       params: {
+  //         page: page,
+  //         count: ITEMS_PER_PAGE,
+  //       },
+  //       headers: {
+  //         Authorization: `Bearer ${token}`,
+  //       },
+  //     });
+
+  //     console.log(response);
+
+  //     if (response.data.length === 0) {
+  //       setHasMore(false);
+  //     } else {
+  //       setPosts((prevPosts) => {
+  //         const newPosts = response.data.filter(
+  //           (newPost) =>
+  //             !prevPosts.some(
+  //               (existingPost) => existingPost._id === newPost._id
+  //             )
+  //         );
+  //         return [...prevPosts, ...newPosts];
+  //       });
+  //       setPage((prevPage) => prevPage + 1);
+  //     }
+  //   } catch (error) {
+  //     console.error("Error fetching posts:", error);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
   const fetchPosts = async () => {
     if (loading || !hasMore) return;
     setLoading(true);
     try {
+      const token = await SecureStore.getItemAsync("userToken");
+      if (!token) {
+        throw new Error("No authentication token found");
+      }
+
       const response = await axios.get(
-        `${BASE_URL}/api/post/posts/${page * ITEMS_PER_PAGE}`
+        `${BASE_URL}/api/post/posts/${page}/${ITEMS_PER_PAGE}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
+
       if (response.data.length === 0) {
         setHasMore(false);
       } else {
@@ -57,11 +112,39 @@ export default function HomeScreen() {
         setPage((prevPage) => prevPage + 1);
       }
     } catch (error) {
-      console.error("Error fetching posts:", error);
+      if (axios.isAxiosError(error)) {
+        if (error.response) {
+          // The request was made and the server responded with a status code
+          // that falls out of the range of 2xx
+          console.error(
+            "Server Error:",
+            error.response.status,
+            error.response.data
+          );
+          // You might want to set an error state here to display to the user
+          setErrorMessage(
+            `Server error: ${error.response.status}. ${
+              error.response.data.message || ""
+            }`
+          );
+        } else if (error.request) {
+          // The request was made but no response was received
+          console.error("Network Error:", error.request);
+          setErrorMessage("Network error. Please check your connection.");
+        } else {
+          // Something happened in setting up the request that triggered an Error
+          console.error("Error:", error.message);
+          setErrorMessage("An unexpected error occurred.");
+        }
+      } else {
+        console.error("Unexpected Error:", error);
+        setErrorMessage("An unexpected error occurred.");
+      }
     } finally {
       setLoading(false);
     }
   };
+
 
   const renderPost = ({ item }) => (
     <Post
