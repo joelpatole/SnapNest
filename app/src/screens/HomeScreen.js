@@ -150,6 +150,7 @@ export default function HomeScreen() {
     <Post
       profileImage={item.userId.profilePicture}
       username={item.userId.name}
+      userId={item.userId._id}
       postImage={item.imageUrl}
       date={item.date}
       genre={item.genreId.displayName}

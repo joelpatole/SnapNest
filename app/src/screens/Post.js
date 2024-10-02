@@ -1,6 +1,9 @@
-import React from "react";
+import React, { useState } from "react";
 import { View, Image, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import * as SecureStore from "expo-secure-store";
+import axios from "axios";
+import { BASE_URL } from "../constants/constants";
 
 const formatDate = (dateString) => {
   const date = new Date(dateString);
@@ -8,15 +11,29 @@ const formatDate = (dateString) => {
   return date.toLocaleDateString("en-US", options);
 };
 
-const onFollow = () => {
+const onFollow = async (userId) => {
   // Call API to add user to followers list
-  alert("following");
+  const token = await SecureStore.getItemAsync("userToken");
+  const response = await axios.post(
+    `${BASE_URL}/api/users/followNewUser`,
+    {
+      userIdToFollow: userId,
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+  if(response) {
+    return 1;
+  }
 };
-
 
 const Post = ({
   profileImage,
   username,
+  userId,
   postImage,
   date,
   description,
@@ -25,6 +42,15 @@ const Post = ({
   isFollowing,
   isOwnPost,
 }) => {
+  const [isFollowingState, setIsFollowingState] = useState(isFollowing);
+
+  const onFollowPress = async () => {
+    const result = await onFollow(userId);
+    if (result === 1) {
+      setIsFollowingState(true);
+    }
+  };
+
   return (
     <View style={styles.post}>
       <View style={styles.header}>
@@ -33,12 +59,15 @@ const Post = ({
           <Text style={styles.username}>{username}</Text>
         </View>
         {!isOwnPost &&
-          (isFollowing ? (
+          (isFollowingState ? (
             <View style={styles.followingContainer}>
               <Text style={styles.followingText}>Following</Text>
             </View>
           ) : (
-            <TouchableOpacity style={styles.button} onPress={onFollow}>
+            <TouchableOpacity
+              style={styles.button}
+              onPress={onFollowPress}
+            >
               <Text style={{ color: "#4B0082", fontWeight: "bold" }}>Follow</Text>
             </TouchableOpacity>
           ))}
@@ -143,15 +172,6 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     marginRight: 10,
   },
-  button: {
-    paddingTop: 8,
-    paddingBottom: 8,
-    paddingLeft: 12,
-    paddingRight: 12,
-    borderRadius: 9,
-    backgroundColor: "#ffa500",
-    marginRight: "5px",
-  },
   followButton: {
     backgroundColor: '#007bff',
     padding: 10,
@@ -170,6 +190,16 @@ const styles = StyleSheet.create({
     color: '#555', // Darker grey text
     textAlign: 'center',
   },
+  button: {
+    paddingTop: 8,
+    paddingBottom: 8,
+    paddingLeft: 12,
+    paddingRight: 12,
+    borderRadius: 9,
+    backgroundColor: "#ffa500",
+    marginRight: "5px",
+  },
 });
 
 export default Post;
+
