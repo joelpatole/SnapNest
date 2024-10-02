@@ -9,9 +9,11 @@ import {
   Dimensions,
   Image,
 } from "react-native";
-import { useRoute } from '@react-navigation/native';
+import { useRoute } from "@react-navigation/native";
 import axios from "axios";
 import { BASE_URL } from "../constants/constants";
+import * as SecureStore from "expo-secure-store";
+import { jwtDecode } from 'jwt-decode';
 
 const images = [
   "https://images.pexels.com/photos/35967/mini-cooper-auto-model-vehicle.jpg?cs=srgb&dl=pexels-pixabay-35967.jpg&fm=jpg",
@@ -31,11 +33,14 @@ const Profile = () => {
   const route = useRoute();
   const userId = route.params?.userId; // Safely access userId
   const [profileDetails, setProfileDetails] = useState({});
-  const [displayPicture, setDisplayPicture] = useState("https://png.pngtree.com/png-vector/20191110/ourmid/pngtree-avatar-icon-profile-icon-member-login-vector-isolated-png-image_1978396.jpg");
+  const [displayPicture, setDisplayPicture] = useState(
+    "https://png.pngtree.com/png-vector/20191110/ourmid/pngtree-avatar-icon-profile-icon-member-login-vector-isolated-png-image_1978396.jpg"
+  );
   const [displayName, setDisplayName] = useState("...");
   const [displayPosts, setDisplayPosts] = useState([]);
   const [followers, setFollowers] = useState(0);
   const [followings, setFollowings] = useState(0);
+  const [isOwnScreen, setIsOwnScreen] = useState(false);
   useEffect(() => {
     if (profileDetails && profileDetails.userDetails) {
       setDisplayPicture(profileDetails.userDetails.profilePicture);
@@ -47,16 +52,31 @@ const Profile = () => {
   }, [profileDetails]);
 
   React.useEffect(() => {
-    (async () => {
+    const fetchProfileDetails = async () => {
       try {
-        const response = await axios.get(`${BASE_URL}/api/users/user/profile/${userId}`);
-        setProfileDetails(response.data);
+        const [profileResponse, userToken] = await Promise.all([
+          axios.get(`${BASE_URL}/api/users/user/profile/${userId}`),
+          SecureStore.getItemAsync("userToken")
+        ]);
+
+        const { userDetails } = profileResponse.data;
+        setProfileDetails(profileResponse.data);
+        setFollowers(userDetails.followers.map(follower => follower.name));
+        setFollowings(userDetails.followings.map(following => following.name));
+
+        if (userToken) {
+          const decodedToken = jwtDecode(userToken);
+          setIsOwnScreen(userId === decodedToken.userId);
+        }
       } catch (error) {
-        console.error("Error fetching profile details:", error);
+        console.error("Error fetching profile details:", error.message);
+        // Handle error state here, e.g., setError(true);
       }
-    })();
+    };
+
+    fetchProfileDetails();
   }, [userId]);
-  
+
   const renderHeader = () => (
     <>
       <View style={styles.profileSection}>
@@ -72,9 +92,7 @@ const Profile = () => {
           <Text style={styles.profileDescription}>
             Best page for Indian photography.
           </Text>
-          <Text style={styles.followedBy}>
-            Followed by shubhankar_05, ashok_ak6931 and 14 others
-          </Text>
+          {/* <Text>Followed by {followings.join(", ")}</Text> */}
         </View>
       </View>
 
@@ -84,21 +102,29 @@ const Profile = () => {
           <Text style={styles.statLabel}>posts</Text>
         </View>
         <View style={styles.statBox}>
-          <Text style={styles.statValue}>{followers}</Text>
+          <Text style={styles.statValue}>{followers.length}</Text>
           <Text style={styles.statLabel}>followers</Text>
         </View>
         <View style={styles.statBox}>
-          <Text style={styles.statValue}>{followings}</Text>
+          <Text style={styles.statValue}>{followings.length}</Text>
           <Text style={styles.statLabel}>following</Text>
         </View>
       </View>
 
       <View style={styles.actionsSection}>
         <TouchableOpacity style={[styles.button, styles.followButton]}>
-          <Text style={styles.buttonText}>Follow</Text>
+          {isOwnScreen ? (
+            <Text style={styles.buttonText}>Edit Profile</Text>
+          ) : (
+            <Text style={styles.buttonText}>Follow</Text>
+          )}
         </TouchableOpacity>
         <TouchableOpacity style={[styles.button, styles.messageButton]}>
-          <Text style={styles.buttonText}>Message</Text>
+        {isOwnScreen ? (
+            <Text style={styles.buttonText}>Share Profile</Text>
+          ) : (
+            <Text style={styles.buttonText}>Message</Text>
+          )}
         </TouchableOpacity>
       </View>
 
@@ -124,7 +150,7 @@ const Profile = () => {
   );
 
   const renderItem = ({ item }) => (
-    <Image source={{ uri: item.imageUrl}} style={styles.galleryImage} />
+    <Image source={{ uri: item.imageUrl }} style={styles.galleryImage} />
   );
 
   const renderFooter = () => (
@@ -193,7 +219,7 @@ const styles = StyleSheet.create({
     padding: 8,
     backgroundColor: "#E4E9F1",
     borderRadius: 8,
-    width : 115
+    width: 115,
   },
   statValue: {
     fontSize: 24,
